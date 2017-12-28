@@ -10,6 +10,7 @@ OBS_DECLARE_MODULE()
 SettingsDialog* Settings_Dialog;
 SceneSwitch* Scene_Switch;
 
+// Function to write the debug-file
 void Debug(QString Textmessage, bool CreateNew = false)
 {
 	if (Scene_Switch->config.Debug)
@@ -32,6 +33,7 @@ void Debug(QString Textmessage, bool CreateNew = false)
 	}
 }
 
+// Function that returns the Scenes as QList<QString>
 QList<QString> getSceneList()
 {
 	QList<QString> SceneNames;
@@ -41,6 +43,7 @@ QList<QString> getSceneList()
 	return SceneNames;
 }
 
+// Setup the FSW (add paths and connect the FSW)
 void StartFileSystemWatcher()
 {
 	QDir watcherdir(QString::fromUtf8(getenv("USERPROFILE")) + "/Documents/Heroes of the Storm/Accounts/");
@@ -71,6 +74,7 @@ void StartFileSystemWatcher()
 	QObject::connect(Scene_Switch->filewatch, SIGNAL(directoryChanged(QString)), Scene_Switch, SLOT(FilesModified(QString)));
 }
 
+// Setup the Configuration Dialog
 void SetupUI()
 {
 	QAction* menu_action = (QAction*)obs_frontend_add_tools_menu_qaction("Heroes Scene Switch");
@@ -82,6 +86,7 @@ void SetupUI()
 	menu_action->connect(menu_action, &QAction::triggered, menu_cb);
 }
 
+// Save the Plguin Configuration
 void HeroesSceneConfig_Save()
 {
 	Debug("Save Config..");
@@ -109,6 +114,7 @@ void HeroesSceneConfig_Save()
 	fileConf.close();
 }
 
+// Load the Plguin Configuration
 void HeroesSceneConfig_Load()
 {
 	// Initalize Standard Values
@@ -176,16 +182,17 @@ void HeroesSceneConfig_Load()
 	Debug("");
 }
 
+// Triggerd if a watched direcory is changed
+// Check the game state and switch to the specified scene if valid
 void SceneSwitch::FilesModified(const QString& directory)
 {
-	Debug("Trigger: \"" + directory + "\"");
 	if (Scene_Switch->config.Enabled)
 	{
+		Debug("Trigger: \"" + directory + "\"");
 		obs_source_t *mySource = 0;
 		obs_source_t *currentScene = obs_frontend_get_current_scene();
-		QString newScenename;
-
 		QList<QString> SceneNames = getSceneList();
+		QString newScenename;
 		
 		Debug("Available Scenes:");
 		for each (QString Scene in SceneNames)
@@ -224,7 +231,6 @@ void SceneSwitch::FilesModified(const QString& directory)
 		{
 			obs_frontend_set_current_scene(mySource);
 			Debug("Scene changed to: " + QString::fromStdString(obs_source_get_name(mySource)));
-
 		}
 
 		obs_source_release(mySource);
