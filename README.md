@@ -1,0 +1,2 @@
+# HeroesSceneSwitch
+OBS-Studio Plugin
