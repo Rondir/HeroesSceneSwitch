@@ -10,7 +10,7 @@ namespace OBS_Module
 
 class SceneSwitch : public QWidget
 {
-  Q_OBJECT
+	Q_OBJECT
 
 private:
 	struct Config
@@ -26,6 +26,7 @@ private:
 public:
 	Config config;
 	QFileSystemWatcher* filewatch;
+	QString TempFolder;
 	SceneSwitch(QWidget* parent = nullptr) : QWidget(parent)
 	{
 		filewatch = new QFileSystemWatcher();
@@ -35,7 +36,7 @@ public:
 
 public slots :
 	void FilesModified(const QString& directory);
-
+	void update();
 };
 
 #endif // HeroesSceneSwitch_H

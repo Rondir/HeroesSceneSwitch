@@ -1,6 +1,7 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
+#include <QtWidgets>
 #include <QDialog>
 #include <ui_settingsdialog.h>
 
@@ -13,22 +14,18 @@ class SettingsDialog : public QDialog
 {
 	Q_OBJECT
 
+private:
+	Ui::SettingsDialog *ui;
+
 public:
 	explicit SettingsDialog(QWidget *parent = 0);
 	~SettingsDialog();
 	void showEvent(QShowEvent * event);
 	void ToggleShowHide();
 
-	private slots:
+private slots:
 	void on_SettingsDialog_accepted();
-	void on_SettingsDialog_rejected()
-	{
-	};
-	void btn_SetHeroesGameScene_clicked();
-	void btn_SetHeroesMenuScene_clicked();
-
-private:
-	Ui::SettingsDialog *ui;
+	void on_SettingsDialog_rejected(){};
 };
 
 #endif // SETTINGSDIALOG_H

@@ -44,6 +44,7 @@ QList<QString> getSceneList()
 }
 
 // Setup the FSW (add paths and connect the FSW)
+// Setup the FSW (add paths and connect the FSW)
 void StartFileSystemWatcher()
 {
 	QDir watcherdir(QString::fromUtf8(getenv("USERPROFILE")) + "/Documents/Heroes of the Storm/Accounts/");
@@ -72,6 +73,13 @@ void StartFileSystemWatcher()
 
 	Debug("Connect Watcher..");
 	QObject::connect(Scene_Switch->filewatch, SIGNAL(directoryChanged(QString)), Scene_Switch, SLOT(FilesModified(QString)));
+
+	Debug("Timer started..");
+	TCHAR buf[MAX_PATH];
+	GetTempPathW(MAX_PATH, buf);
+	Scene_Switch->TempFolder = QString::fromStdWString(buf) + "Heroes of the Storm\\TempWriteReplayP1";
+
+	QTimer::singleShot(1000, Scene_Switch, SLOT(update()));
 }
 
 // Setup the Configuration Dialog
@@ -121,7 +129,7 @@ void HeroesSceneConfig_Load()
 	Scene_Switch->config.HeroesMenuScene = "HeroesMenu";
 	Scene_Switch->config.HeroesGameScene = "HeroesGame";
 	Scene_Switch->config.Autostart = false;
-	Scene_Switch->config.Debug = true;
+	Scene_Switch->config.Debug = false;
 
 	Debug("Heroes Scene Switch loading..", true);
 
@@ -182,61 +190,73 @@ void HeroesSceneConfig_Load()
 	Debug("");
 }
 
-// Triggerd if a watched direcory is changed
+// Switch the scene by name
+void SwitchToScene(QString newSceneName)
+{
+	obs_source_t *mySource = 0;
+	obs_source_t *currentScene = obs_frontend_get_current_scene();
+	QList<QString> SceneNames = getSceneList();
+
+	Debug("Available Scenes:");
+	for each (QString Scene in SceneNames)
+	{
+		if (Scene.compare(obs_source_get_name(currentScene)) == 0)
+			Debug(Scene + " (current)");
+		else
+			Debug(Scene);
+	}
+	Debug("\n");
+
+	if (SceneNames.contains(newSceneName))
+	{
+		Debug("Set new Scenename to " + newSceneName);
+		mySource = obs_get_source_by_name(newSceneName.toStdString().c_str());
+	}
+	else
+		Debug("Invalid Scenename: " + newSceneName);
+
+	if (mySource != currentScene)
+	{
+		obs_frontend_set_current_scene(mySource);
+		Debug("Scene changed to: " + QString::fromStdString(obs_source_get_name(mySource)));
+	}
+
+	obs_source_release(mySource);
+	obs_source_release(currentScene);
+}
+
+// Triggered if a watched direcory is changed
 // Check the game state and switch to the specified scene if valid
 void SceneSwitch::FilesModified(const QString& directory)
 {
 	if (Scene_Switch->config.Enabled)
 	{
 		Debug("Trigger: \"" + directory + "\"");
-		obs_source_t *mySource = 0;
-		obs_source_t *currentScene = obs_frontend_get_current_scene();
-		QList<QString> SceneNames = getSceneList();
-		QString newScenename;
-		
-		Debug("Available Scenes:");
-		for each (QString Scene in SceneNames)
-		{
-			if (Scene.compare(obs_source_get_name(currentScene)) == 0)
-				Debug(Scene + " (current)");
-			else
-				Debug(Scene);
-		}
-		Debug("\n");
-
 		if (directory.contains("Replays/Multiplayer"))
 		{
-			newScenename = Scene_Switch->config.HeroesMenuScene;
-			if (SceneNames.contains(newScenename))
-			{
-				Debug("Set new Scenename to " + newScenename);
-				mySource = obs_get_source_by_name(newScenename.toStdString().c_str());
-			}
-			else
-				Debug("Invalid Scenename: " + newScenename);
+			SwitchToScene(Scene_Switch->config.HeroesMenuScene);
 		}
 		else if (directory.contains("Saves/Rejoin"))
 		{
-			newScenename = Scene_Switch->config.HeroesGameScene;
-			if (SceneNames.contains(newScenename))
-			{
-				Debug("Set new Scenename to " + newScenename);
-				mySource = obs_get_source_by_name(newScenename.toStdString().c_str());
-			}
-			else
-				Debug("Invalid Scenename: " + newScenename);
+			SwitchToScene(Scene_Switch->config.HeroesGameScene);
 		}
-
-		if (mySource != currentScene)
-		{
-			obs_frontend_set_current_scene(mySource);
-			Debug("Scene changed to: " + QString::fromStdString(obs_source_get_name(mySource)));
-		}
-
-		obs_source_release(mySource);
-		obs_source_release(currentScene);
 	}
 	return;
+}
+
+// Triggered every 1 second
+// Check Heroes TempFolder exists
+void SceneSwitch::update()
+{
+	if (QDir(Scene_Switch->TempFolder).exists())
+	{
+		SwitchToScene(Scene_Switch->config.HeroesGameScene);
+	}
+	else
+	{
+		SwitchToScene(Scene_Switch->config.HeroesMenuScene);
+	}
+	QTimer::singleShot(1000, Scene_Switch, SLOT(update()));
 }
 
 void SettingsDialog::showEvent(QShowEvent * event)
@@ -244,23 +264,27 @@ void SettingsDialog::showEvent(QShowEvent * event)
 	Debug("Open Settings Dialog");
 	Settings_Dialog->setFixedSize(Settings_Dialog->size());
 
-	ui->list_HeroesScenes->clear();
-	ui->list_HeroesScenes->addItems(getSceneList());
-	ui->cb_HeroesAutostart->setChecked(Scene_Switch->config.Autostart);
-	ui->cb_HeroesStarted->setChecked(Scene_Switch->config.Enabled);
-	ui->cb_Debug->setChecked(Scene_Switch->config.Debug);
-	ui->eb_HeroesMenuScene->setText(Scene_Switch->config.HeroesMenuScene);
-	ui->eb_HeroesGameScene->setText(Scene_Switch->config.HeroesGameScene);
+	ui->chk_HeroesAutostart->setChecked(Scene_Switch->config.Autostart);
+	ui->chk_HeroesStarted->setChecked(Scene_Switch->config.Enabled);
+	ui->chk_Debug->setChecked(Scene_Switch->config.Debug);
+
+	ui->cb_MenuScene->clear();
+	ui->cb_MenuScene->addItems(getSceneList());
+	ui->cb_MenuScene->setCurrentText(Scene_Switch->config.HeroesMenuScene);
+
+	ui->cb_GameScene->clear();
+	ui->cb_GameScene->addItems(getSceneList());
+	ui->cb_GameScene->setCurrentText(Scene_Switch->config.HeroesGameScene);
 }
 
 void SettingsDialog::on_SettingsDialog_accepted()
 {
 	Debug("Settings Dialog accepted");
-	Scene_Switch->config.Autostart = ui->cb_HeroesAutostart->isChecked();
-	Scene_Switch->config.Enabled = ui->cb_HeroesStarted->isChecked();
-	Scene_Switch->config.Debug = ui->cb_Debug->isChecked();
-	Scene_Switch->config.HeroesMenuScene = ui->eb_HeroesMenuScene->text();
-	Scene_Switch->config.HeroesGameScene = ui->eb_HeroesGameScene->text();
+	Scene_Switch->config.Autostart = ui->chk_HeroesAutostart->isChecked();
+	Scene_Switch->config.Enabled = ui->chk_HeroesStarted->isChecked();
+	Scene_Switch->config.Debug = ui->chk_Debug->isChecked();
+	Scene_Switch->config.HeroesMenuScene = ui->cb_MenuScene->currentText();
+	Scene_Switch->config.HeroesGameScene = ui->cb_GameScene->currentText();
 	HeroesSceneConfig_Save();
 }
 
