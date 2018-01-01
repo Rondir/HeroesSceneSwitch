@@ -248,13 +248,15 @@ void SceneSwitch::FilesModified(const QString& directory)
 // Check Heroes TempFolder exists
 void SceneSwitch::update()
 {
-	if (QDir(Scene_Switch->TempFolder).exists())
+	if (QDir(Scene_Switch->TempFolder).exists() && !boolIngame)
 	{
 		SwitchToScene(Scene_Switch->config.HeroesGameScene);
+		boolIngame = true;
 	}
-	else
+	else if (!QDir(Scene_Switch->TempFolder).exists() && boolIngame)
 	{
 		SwitchToScene(Scene_Switch->config.HeroesMenuScene);
+		boolIngame = false;
 	}
 	QTimer::singleShot(1000, Scene_Switch, SLOT(update()));
 }

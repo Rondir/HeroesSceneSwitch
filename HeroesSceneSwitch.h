@@ -27,6 +27,7 @@ public:
 	Config config;
 	QFileSystemWatcher* filewatch;
 	QString TempFolder;
+	bool boolIngame = false;
 	SceneSwitch(QWidget* parent = nullptr) : QWidget(parent)
 	{
 		filewatch = new QFileSystemWatcher();
