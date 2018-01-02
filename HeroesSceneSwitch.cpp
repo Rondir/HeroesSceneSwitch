@@ -16,20 +16,20 @@ void Debug(QString Textmessage, bool CreateNew = false)
 	if (Scene_Switch->config.Debug)
 	{
 		QTime TimeStamp = QTime::currentTime();
-		QString filename = "HeroDebug.txt";
-		QFile file(filename);
-		QFlag filemode = QIODevice::Append;
+		QString Filename = "HeroDebug.txt";
+		QFile File(Filename);
+		QFlag Filemode = QIODevice::Append;
 		if (CreateNew == true)
 		{
-			filemode = QIODevice::WriteOnly;
+			Filemode = QIODevice::WriteOnly;
 		}
 
-		if (file.open(filemode))
+		if (File.open(Filemode))
 		{
-			QTextStream stream(&file);
-			stream << TimeStamp.toString() << ": " << Textmessage << endl;
+			QTextStream ts(&File);
+			ts << TimeStamp.toString() << ": " << Textmessage << endl;
 		}
-		file.close();
+		File.close();
 	}
 }
 
@@ -43,7 +43,6 @@ QList<QString> getSceneList()
 	return SceneNames;
 }
 
-// Setup the FSW (add paths and connect the FSW)
 // Setup the FSW (add paths and connect the FSW)
 void StartFileSystemWatcher()
 {
@@ -292,7 +291,7 @@ void SettingsDialog::on_SettingsDialog_accepted()
 
 bool obs_module_load()
 {
-	Scene_Switch = new SceneSwitch((QMainWindow*)obs_frontend_get_main_window());
+	Scene_Switch = new SceneSwitch();
 
 	HeroesSceneConfig_Load();
 	SetupUI();
