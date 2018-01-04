@@ -192,36 +192,39 @@ void HeroesSceneConfig_Load()
 // Switch the scene by name
 void SwitchToScene(QString newSceneName)
 {
-	obs_source_t *mySource = 0;
-	obs_source_t *currentScene = obs_frontend_get_current_scene();
-	QList<QString> SceneNames = getSceneList();
-
-	Debug("Available Scenes:");
-	for each (QString Scene in SceneNames)
+	if (Scene_Switch->config.Enabled)
 	{
-		if (Scene.compare(obs_source_get_name(currentScene)) == 0)
-			Debug(Scene + " (current)");
+		obs_source_t *mySource = 0;
+		obs_source_t *currentScene = obs_frontend_get_current_scene();
+		QList<QString> SceneNames = getSceneList();
+
+		Debug("Available Scenes:");
+		for each (QString Scene in SceneNames)
+		{
+			if (Scene.compare(obs_source_get_name(currentScene)) == 0)
+				Debug(Scene + " (current)");
+			else
+				Debug(Scene);
+		}
+		Debug("\n");
+
+		if (SceneNames.contains(newSceneName))
+		{
+			Debug("Set new Scenename to " + newSceneName);
+			mySource = obs_get_source_by_name(newSceneName.toStdString().c_str());
+		}
 		else
-			Debug(Scene);
-	}
-	Debug("\n");
+			Debug("Invalid Scenename: " + newSceneName);
 
-	if (SceneNames.contains(newSceneName))
-	{
-		Debug("Set new Scenename to " + newSceneName);
-		mySource = obs_get_source_by_name(newSceneName.toStdString().c_str());
-	}
-	else
-		Debug("Invalid Scenename: " + newSceneName);
+		if (mySource != currentScene)
+		{
+			obs_frontend_set_current_scene(mySource);
+			Debug("Scene changed to: " + QString::fromStdString(obs_source_get_name(mySource)));
+		}
 
-	if (mySource != currentScene)
-	{
-		obs_frontend_set_current_scene(mySource);
-		Debug("Scene changed to: " + QString::fromStdString(obs_source_get_name(mySource)));
+		obs_source_release(mySource);
+		obs_source_release(currentScene);
 	}
-
-	obs_source_release(mySource);
-	obs_source_release(currentScene);
 }
 
 // Triggered if a watched direcory is changed
