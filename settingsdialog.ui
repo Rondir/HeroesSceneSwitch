@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>305</width>
-    <height>209</height>
+    <width>500</width>
+    <height>210</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,11 +25,23 @@
   <widget class="QDialogButtonBox" name="btn_DialogButtons">
    <property name="geometry">
     <rect>
-     <x>12</x>
+     <x>100</x>
      <y>170</y>
-     <width>281</width>
+     <width>300</width>
      <height>28</height>
     </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -38,7 +50,7 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
    <property name="centerButtons">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QLabel" name="lbl_HeroesMenuScene">
@@ -46,7 +58,7 @@
     <rect>
      <x>16</x>
      <y>11</y>
-     <width>75</width>
+     <width>100</width>
      <height>22</height>
     </rect>
    </property>
@@ -57,9 +69,9 @@
   <widget class="QLabel" name="lbl_HeroesGameScene">
    <property name="geometry">
     <rect>
-     <x>14</x>
-     <y>50</y>
-     <width>77</width>
+     <x>16</x>
+     <y>60</y>
+     <width>100</width>
      <height>22</height>
     </rect>
    </property>
@@ -70,8 +82,8 @@
   <widget class="QCheckBox" name="chk_HeroesAutostart">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>113</y>
+     <x>270</x>
+     <y>60</y>
      <width>195</width>
      <height>20</height>
     </rect>
@@ -83,9 +95,9 @@
   <widget class="QComboBox" name="cb_MenuScene">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>11</y>
-     <width>195</width>
+     <x>30</x>
+     <y>30</y>
+     <width>200</width>
      <height>22</height>
     </rect>
    </property>
@@ -93,21 +105,24 @@
   <widget class="QCheckBox" name="chk_Debug">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>86</y>
+     <x>270</x>
+     <y>90</y>
      <width>195</width>
      <height>20</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Generates a Debug-File in OBS\Bin-Directory.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
    <property name="text">
-    <string>Debug (File in Bin Directory)</string>
+    <string>Enable Debug</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="chk_HeroesStarted">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>140</y>
+     <x>270</x>
+     <y>30</y>
      <width>195</width>
      <height>20</height>
     </rect>
@@ -119,11 +134,40 @@
   <widget class="QComboBox" name="cb_GameScene">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>50</y>
-     <width>195</width>
+     <x>30</x>
+     <y>80</y>
+     <width>200</width>
      <height>22</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="eb_TempPath">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>130</y>
+     <width>200</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lbl_TempPath">
+   <property name="geometry">
+    <rect>
+     <x>16</x>
+     <y>110</y>
+     <width>100</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string>Temp Path:</string>
    </property>
   </widget>
  </widget>

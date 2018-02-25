@@ -13,7 +13,7 @@ SceneSwitch* Scene_Switch;
 // Function to write the debug-file
 void Debug(QString Textmessage, bool CreateNew = false)
 {
-	if (Scene_Switch->config.Debug)
+	if (Scene_Switch->config.Debug || CreateNew)
 	{
 		QTime TimeStamp = QTime::currentTime();
 		QString Filename = "HeroDebug.txt";
@@ -43,44 +43,6 @@ QList<QString> getSceneList()
 	return SceneNames;
 }
 
-// Setup the FSW (add paths and connect the FSW)
-void StartFileSystemWatcher()
-{
-	QDir watcherdir(QString::fromUtf8(getenv("USERPROFILE")) + "/Documents/Heroes of the Storm/Accounts/");
-
-	for each (QString SubDirName in watcherdir.entryList(QDir::NoDotAndDotDot | QDir::Dirs))
-	{
-		QDir SubDir(watcherdir.absolutePath() + "/" + SubDirName);
-		for each (QString SubSubDirName in SubDir.entryList(QDir::NoDotAndDotDot | QDir::Dirs))
-		{
-			QDir RejoinDir = SubDir.absolutePath() + "/" + SubSubDirName + "/Saves/Rejoin";
-			Scene_Switch->filewatch->addPath(RejoinDir.absolutePath());
-			Scene_Switch->filewatch->addPath(SubDir.absolutePath() + "/" + SubSubDirName + "/Replays/Multiplayer");
-		}
-	}
-	Scene_Switch->filewatch->directories().removeDuplicates();
-	Scene_Switch->filewatch->files().removeDuplicates();
-
-	Debug("");
-	Debug("---------Watching---------");
-	Debug("Directories:");
-	for each (QString directory in Scene_Switch->filewatch->directories())
-	{
-		Debug(directory);
-	}
-	Debug("--------------------------\n");
-
-	Debug("Connect Watcher..");
-	QObject::connect(Scene_Switch->filewatch, SIGNAL(directoryChanged(QString)), Scene_Switch, SLOT(FilesModified(QString)));
-
-	Debug("Timer started..");
-	TCHAR buf[MAX_PATH];
-	GetTempPathW(MAX_PATH, buf);
-	Scene_Switch->TempFolder = QString::fromStdWString(buf) + "Heroes of the Storm\\TempWriteReplayP1";
-
-	QTimer::singleShot(1000, Scene_Switch, SLOT(update()));
-}
-
 // Setup the Configuration Dialog
 void SetupUI()
 {
@@ -103,8 +65,8 @@ void HeroesSceneConfig_Save()
 	QString confMessage;
 
 	tsConf << "HeroesMenuScene = \"" << Scene_Switch->config.HeroesMenuScene << "\"" << endl;
-
 	tsConf << "HeroesGameScene = \"" << Scene_Switch->config.HeroesGameScene << "\"" << endl;
+	tsConf << "TempPath = \"" << Scene_Switch->config.TempFolder << "\"" << endl;
 
 	if (Scene_Switch->config.Autostart)
 		confMessage = "HeroesAutostart = \"on\"";
@@ -124,7 +86,12 @@ void HeroesSceneConfig_Save()
 // Load the Plguin Configuration
 void HeroesSceneConfig_Load()
 {
+	// Get SystemTempPath
+	TCHAR buf[MAX_PATH];
+	GetTempPathW(MAX_PATH, buf);
+
 	// Initalize Standard Values
+	Scene_Switch->config.TempFolder = QString::fromStdWString(buf) + "Heroes of the Storm\\TempWriteReplayP1";
 	Scene_Switch->config.HeroesMenuScene = "HeroesMenu";
 	Scene_Switch->config.HeroesGameScene = "HeroesGame";
 	Scene_Switch->config.Autostart = false;
@@ -160,6 +127,11 @@ void HeroesSceneConfig_Load()
 			{
 				QStringList value = line.split("\"");
 				Scene_Switch->config.HeroesGameScene = value[1];
+			}
+			else if (line.contains("TempPath"))
+			{
+				QStringList value = line.split("\"");
+				Scene_Switch->config.TempFolder = value[1];
 			}
 			else if (line.contains("HeroesAutostart"))
 			{
@@ -227,35 +199,16 @@ void SwitchToScene(QString newSceneName)
 	}
 }
 
-// Triggered if a watched direcory is changed
-// Check the game state and switch to the specified scene if valid
-void SceneSwitch::FilesModified(const QString& directory)
-{
-	if (Scene_Switch->config.Enabled)
-	{
-		Debug("Trigger: \"" + directory + "\"");
-		if (directory.contains("Replays/Multiplayer"))
-		{
-			SwitchToScene(Scene_Switch->config.HeroesMenuScene);
-		}
-		else if (directory.contains("Saves/Rejoin"))
-		{
-			SwitchToScene(Scene_Switch->config.HeroesGameScene);
-		}
-	}
-	return;
-}
-
 // Triggered every 1 second
 // Check Heroes TempFolder exists
 void SceneSwitch::update()
 {
-	if (QDir(Scene_Switch->TempFolder).exists() && !boolIngame)
+	if (QDir(Scene_Switch->config.TempFolder).exists() && !boolIngame)
 	{
 		SwitchToScene(Scene_Switch->config.HeroesGameScene);
 		boolIngame = true;
 	}
-	else if (!QDir(Scene_Switch->TempFolder).exists() && boolIngame)
+	else if (!QDir(Scene_Switch->config.TempFolder).exists() && boolIngame)
 	{
 		SwitchToScene(Scene_Switch->config.HeroesMenuScene);
 		boolIngame = false;
@@ -279,6 +232,8 @@ void SettingsDialog::showEvent(QShowEvent * event)
 	ui->cb_GameScene->clear();
 	ui->cb_GameScene->addItems(getSceneList());
 	ui->cb_GameScene->setCurrentText(Scene_Switch->config.HeroesGameScene);
+
+	ui->eb_TempPath->setText(Scene_Switch->config.TempFolder);
 }
 
 void SettingsDialog::on_SettingsDialog_accepted()
@@ -289,6 +244,7 @@ void SettingsDialog::on_SettingsDialog_accepted()
 	Scene_Switch->config.Debug = ui->chk_Debug->isChecked();
 	Scene_Switch->config.HeroesMenuScene = ui->cb_MenuScene->currentText();
 	Scene_Switch->config.HeroesGameScene = ui->cb_GameScene->currentText();
+	Scene_Switch->config.TempFolder = ui->eb_TempPath->text();
 	HeroesSceneConfig_Save();
 }
 
@@ -298,7 +254,9 @@ bool obs_module_load()
 
 	HeroesSceneConfig_Load();
 	SetupUI();
-	StartFileSystemWatcher();
+
+	QTimer::singleShot(1000, Scene_Switch, SLOT(update()));
+	Debug("Timer started..");
 
 	return true;
 }

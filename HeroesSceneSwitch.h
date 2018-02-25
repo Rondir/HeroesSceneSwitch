@@ -18,6 +18,7 @@ private:
 		 QString HeroesSceneConfig_Path;
 		 QString HeroesMenuScene;
 		 QString HeroesGameScene;
+		 QString TempFolder;
 		 bool Autostart;
 		 bool Enabled;
 		 bool Debug;
@@ -25,18 +26,11 @@ private:
 
 public:
 	Config config;
-	QFileSystemWatcher* filewatch;
-	QString TempFolder;
 	bool boolIngame = false;
-	SceneSwitch(QWidget* parent = nullptr) : QWidget(parent)
-	{
-		filewatch = new QFileSystemWatcher();
-	};
-
+	SceneSwitch(QWidget* parent = nullptr) : QWidget(parent) {};
 	~SceneSwitch()	{};
 
 public slots :
-	void FilesModified(const QString& directory);
 	void update();
 };
 
