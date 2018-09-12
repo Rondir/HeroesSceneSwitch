@@ -20,12 +20,13 @@ private:
 public:
 	explicit SettingsDialog(QWidget *parent = 0);
 	~SettingsDialog();
-	void showEvent(QShowEvent * event);
+	void showEvent();
 	void ToggleShowHide();
 
 private slots:
 	void on_SettingsDialog_accepted();
 	void on_SettingsDialog_rejected(){};
+	void on_reset_clicked();
 };
 
 #endif // SETTINGSDIALOG_H

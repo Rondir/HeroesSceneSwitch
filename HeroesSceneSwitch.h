@@ -19,6 +19,7 @@ private:
 		 QString HeroesMenuScene;
 		 QString HeroesGameScene;
 		 QString TempFolder;
+		 QString ReplayFolder;
 		 bool Autostart;
 		 bool Enabled;
 		 bool Debug;
@@ -32,6 +33,7 @@ public:
 
 public slots :
 	void update();
+	void replayChanged(QString changedFile);
 };
 
 #endif // HeroesSceneSwitch_H
