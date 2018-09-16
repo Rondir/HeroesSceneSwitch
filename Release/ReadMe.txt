@@ -7,5 +7,4 @@ Setup:
 	- "Menu" state is triggered when the match finished
 
 Update 12.09.2018:
-	Heroes of the Storm has changed a lot with the last patch, the scene change is now triggered when saving the replays.
-	Therefore, automatic saving of replays must be enabled in the Heroes client.
+	Heroes of the Storm has changed a lot with the last patch, the plugin is not working anymore.
