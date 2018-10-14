@@ -20,7 +20,7 @@ private:
 public:
 	explicit SettingsDialog(QWidget *parent = 0);
 	~SettingsDialog();
-	void showEvent();
+	void showEvent(QShowEvent *ev);
 	void ToggleShowHide();
 
 private slots:

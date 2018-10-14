@@ -33,6 +33,7 @@ public:
 
 public slots :
 	void update();
+	void deleteTempFiles();
 	void replayChanged(QString changedFile);
 };
 

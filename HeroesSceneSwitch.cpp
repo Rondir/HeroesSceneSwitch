@@ -80,7 +80,7 @@ void HeroesSceneConfig_Save()
 		confMessage = "Debug = \"on\"";
 	else
 		confMessage = "Debug = \"off\"";
-	tsConf << confMessage << endl;
+	tsConf << confMessage;
 
 	fileConf.close();
 }
@@ -108,29 +108,24 @@ void HeroesSceneConfig_Reset()
 		}
 	}
 
-	//MessageBoxA(0, qpathReplays.absolutePath().toStdString().c_str(), 0, 0);
-
 	// Initalize standard values.
 	Scene_Switch->config.TempFolder = QString::fromStdWString(pathTempFolder) + "Heroes of the Storm\\TempWriteReplayP1";
-	Scene_Switch->config.ReplayFolder = qpathReplays.absolutePath();
+	Scene_Switch->config.ReplayFolder = qpathReplays.absolutePath().replace("/","\\");
 	Scene_Switch->config.HeroesMenuScene = "HeroesMenu";
 	Scene_Switch->config.HeroesGameScene = "HeroesGame";
-	Scene_Switch->config.Autostart = false;
+	Scene_Switch->config.Autostart = true;
 	Scene_Switch->config.Debug = false;
 
-	Debug("Heroes Scene Switch loading..", true);
-
-	// Create Settings Directory, if not exist.
-	QDir ModuleConfigPath(obs_module_config_path(""));
-	if (!ModuleConfigPath.exists()) ModuleConfigPath.mkpath(".");
-
-	HeroesSceneConfig_Save();
 }
 
 // Load the Plugin Configuration
 void HeroesSceneConfig_Load()
 {
-	HeroesSceneConfig_Reset();
+	Debug("Heroes Scene Switch loading..", true);
+
+	// Create Settings Directory, if not exist.
+	QDir ModuleConfigPath(obs_module_config_path(""));
+	if (!ModuleConfigPath.exists()) ModuleConfigPath.mkpath(".");
 	Debug("Load Config..");
 	QString FilePath = obs_module_config_path("settings.txt");
 	FilePath = FilePath.replace("\\", "/");
@@ -185,9 +180,15 @@ void HeroesSceneConfig_Load()
 		}
 		fileConf.close();
 	}
-	
+
+
+	if (Scene_Switch->config.HeroesMenuScene.isEmpty() || Scene_Switch->config.HeroesGameScene.isEmpty())
+	{
+		HeroesSceneConfig_Reset();
+	}
+
 	Scene_Switch->config.Enabled = Scene_Switch->config.Autostart;
-	
+
 	Debug("Menu Scene = " + Scene_Switch->config.HeroesMenuScene);
 	Debug("Game Scene = " + Scene_Switch->config.HeroesGameScene);
 	Debug("Autostart = " + QString::number(Scene_Switch->config.Autostart));
@@ -260,9 +261,8 @@ void SceneSwitch::update()
 	//Debug("Timer Intervall set to " + QString::number(time));
 }
 
-void SceneSwitch::replayChanged(QString changedFile)
+void SceneSwitch::deleteTempFiles()
 {
-	MessageBoxW(0, L"Replayes modified.", 0, 0);
 	QDir dir(Scene_Switch->config.TempFolder);
 	if (dir.exists())
 	{
@@ -270,7 +270,13 @@ void SceneSwitch::replayChanged(QString changedFile)
 	}
 }
 
-void SettingsDialog::showEvent()
+void SceneSwitch::replayChanged(QString changedFile)
+{
+	//MessageBoxW(0, L"Replayes modified.", 0, 0);
+	QTimer::singleShot(5000, Scene_Switch, SLOT(deleteTempFiles()));
+}
+
+void SettingsDialog::showEvent(QShowEvent *ev)
 {
 	Debug("Open Settings Dialog");
 	Settings_Dialog->setFixedSize(Settings_Dialog->size());
@@ -295,7 +301,7 @@ void SettingsDialog::on_reset_clicked()
 {
 	HeroesSceneConfig_Reset();
 	HeroesSceneConfig_Save();
-	SettingsDialog::showEvent();
+	SettingsDialog::showEvent(0);
 }
 
 void SettingsDialog::on_SettingsDialog_accepted()
@@ -315,6 +321,7 @@ bool obs_module_load()
 {
 	Scene_Switch = new SceneSwitch();
 
+	HeroesSceneConfig_Reset();
 	HeroesSceneConfig_Load();
 	SetupUI();
 
