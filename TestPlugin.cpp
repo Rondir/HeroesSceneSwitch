@@ -2,7 +2,6 @@
 #include <obs-frontend-api.h>
 #include <Testplugin.h>
 #include <QtCore>
-#include <QMessageBox>
 
 OBS_DECLARE_MODULE()
 
@@ -32,6 +31,6 @@ bool obs_module_load()
 	count = 0;
 
 	QTimer::singleShot(100, testPlugin, SLOT(update()));
-	//QMessageBox::information(0, "TestPlugin", "Modul geladen.", 0, 0);
+	QMessageBox::information(0, "TestPlugin", "Modul geladen.", 0, 0);
 	return true;
 }
