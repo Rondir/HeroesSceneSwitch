@@ -1,7 +1,6 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <Testplugin.h>
-#include <QtCore>
 
 OBS_DECLARE_MODULE()
 

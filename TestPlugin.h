@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtCore>
 #include <QtWidgets>
 
 namespace OBS_Module
