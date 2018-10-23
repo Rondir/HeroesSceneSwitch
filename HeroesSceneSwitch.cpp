@@ -10,6 +10,7 @@ SettingsDialog* Settings_Dialog;
 SceneSwitch* Scene_Switch;
 QFileSystemWatcher fileSystemWatcher;
 bool boolTest = true;
+bool notSaving = true;
 
 // Function to write the debug-file
 void Debug(QString Textmessage, bool CreateNew = false)
@@ -59,30 +60,38 @@ void SetupUI()
 // Save the Plugin Configuration
 void HeroesSceneConfig_Save()
 {
-	Debug("Save Config..");
-	QFile fileConf(Scene_Switch->config.HeroesSceneConfig_Path);
-	fileConf.open(QIODevice::ReadWrite);
-	QTextStream tsConf(&fileConf);
-	QString confMessage;
+	if (notSaving)
+	{
+		notSaving = false;
+		Debug("Save Config..");
+		QFile fileConf(Scene_Switch->config.HeroesSceneConfig_Path);
+		fileConf.open(QIODevice::ReadWrite);
+		QTextStream tsConf(&fileConf);
+		QString confMessage;
 
-	tsConf << "HeroesMenuScene = \"" << Scene_Switch->config.HeroesMenuScene << "\"" << endl;
-	tsConf << "HeroesGameScene = \"" << Scene_Switch->config.HeroesGameScene << "\"" << endl;
-	tsConf << "TempPath = \"" << Scene_Switch->config.TempFolder << "\"" << endl;
-	tsConf << "ReplaysPath = \"" << Scene_Switch->config.ReplayFolder << "\"" << endl;
+		tsConf << "HeroesMenuScene = \"" << Scene_Switch->config.HeroesMenuScene << "\"" << endl;
+		tsConf << "HeroesGameScene = \"" << Scene_Switch->config.HeroesGameScene << "\"" << endl;
+		tsConf << "TempPath = \"" << Scene_Switch->config.TempFolder << "\"" << endl;
+		for (int i = 0; i < Scene_Switch->config.ReplayFolders.count(); i++)
+		{
+			tsConf << "ReplaysPath = \"" << Scene_Switch->config.ReplayFolders[i] << "\"" << endl;
+		}
 
-	if (Scene_Switch->config.Autostart)
-		confMessage = "HeroesAutostart = \"on\"";
-	else
-		confMessage = "HeroesAutostart = \"off\"";
-	tsConf << confMessage << endl;
+		if (Scene_Switch->config.Autostart)
+			confMessage = "HeroesAutostart = \"on\"";
+		else
+			confMessage = "HeroesAutostart = \"off\"";
+		tsConf << confMessage << endl;
 
-	if (Scene_Switch->config.Debug)
-		confMessage = "Debug = \"on\"";
-	else
-		confMessage = "Debug = \"off\"";
-	tsConf << confMessage;
+		if (Scene_Switch->config.Debug)
+			confMessage = "Debug = \"on\"";
+		else
+			confMessage = "Debug = \"off\"";
+		tsConf << confMessage;
 
-	fileConf.close();
+		fileConf.close();
+		notSaving = true;
+	}
 }
 
 void HeroesSceneConfig_Reset()
@@ -96,6 +105,7 @@ void HeroesSceneConfig_Reset()
 	SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, pathMyDocuments);
 
 	// Build replayspath..
+	QList<QString> ReplayList;
 	QDir qpathReplays(QString::fromStdWString(pathMyDocuments) + "/Heroes of the Storm/Accounts/");
 	qpathReplays.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
 	qpathReplays = qpathReplays.absolutePath() + "/" + qpathReplays.entryList()[0];
@@ -105,12 +115,14 @@ void HeroesSceneConfig_Reset()
 		if (qpathReplays.entryList()[i].contains("hero", Qt::CaseInsensitive))
 		{
 			qpathReplays = qpathReplays.absolutePath() + "/" + qpathReplays.entryList()[i] + "/Replays/Multiplayer";
+			ReplayList.append(qpathReplays.absolutePath().replace("/", "\\"));
 		}
 	}
+	ReplayList.removeDuplicates();
 
 	// Initalize standard values.
 	Scene_Switch->config.TempFolder = QString::fromStdWString(pathTempFolder) + "Heroes of the Storm\\TempWriteReplayP1";
-	Scene_Switch->config.ReplayFolder = qpathReplays.absolutePath().replace("/","\\");
+	Scene_Switch->config.ReplayFolders = ReplayList;
 	Scene_Switch->config.HeroesMenuScene = "HeroesMenu";
 	Scene_Switch->config.HeroesGameScene = "HeroesGame";
 	Scene_Switch->config.Autostart = true;
@@ -159,7 +171,7 @@ void HeroesSceneConfig_Load()
 			else if (line.contains("ReplaysPath"))
 			{
 				QStringList value = line.split("\"");
-				Scene_Switch->config.ReplayFolder = value[1];
+				Scene_Switch->config.ReplayFolders.append(value[1]);
 			}
 			else if (line.contains("HeroesAutostart"))
 			{
@@ -178,6 +190,7 @@ void HeroesSceneConfig_Load()
 					Scene_Switch->config.Debug = false;
 			}
 		}
+		Scene_Switch->config.ReplayFolders.removeDuplicates();
 		fileConf.close();
 	}
 
@@ -293,8 +306,10 @@ void SettingsDialog::showEvent(QShowEvent *ev)
 	ui->cb_GameScene->addItems(getSceneList());
 	ui->cb_GameScene->setCurrentText(Scene_Switch->config.HeroesGameScene);
 
+	ui->cb_ReplaysPath->clear();
+	ui->cb_ReplaysPath->addItems(Scene_Switch->config.ReplayFolders);
+
 	ui->eb_TempPath->setText(Scene_Switch->config.TempFolder);
-	ui->eb_ReplaysPath->setText(Scene_Switch->config.ReplayFolder);
 }
 
 void SettingsDialog::on_reset_clicked()
@@ -313,7 +328,17 @@ void SettingsDialog::on_SettingsDialog_accepted()
 	Scene_Switch->config.HeroesMenuScene = ui->cb_MenuScene->currentText();
 	Scene_Switch->config.HeroesGameScene = ui->cb_GameScene->currentText();
 	Scene_Switch->config.TempFolder = ui->eb_TempPath->text();
-	Scene_Switch->config.ReplayFolder = ui->eb_ReplaysPath->text();
+
+	Scene_Switch->config.ReplayFolders.clear();
+	for (int i = 0; i < ui->cb_ReplaysPath->count(); i++)
+	{
+		QDir newReplayPath(ui->cb_ReplaysPath->itemText(i));
+		if (newReplayPath.exists())
+		{
+			Scene_Switch->config.ReplayFolders.append(newReplayPath.absolutePath().replace("/", "\\"));
+		}
+	}
+	Scene_Switch->config.ReplayFolders.removeDuplicates();
 	HeroesSceneConfig_Save();
 }
 
@@ -328,7 +353,7 @@ bool obs_module_load()
 	QTimer::singleShot(1000, Scene_Switch, SLOT(update()));
 	Debug("Timer started..");
 
-	fileSystemWatcher.addPath(Scene_Switch->config.ReplayFolder);
+	fileSystemWatcher.addPaths(Scene_Switch->config.ReplayFolders);
 	Scene_Switch->connect(&fileSystemWatcher, SIGNAL(directoryChanged(QString)), Scene_Switch, SLOT(replayChanged(QString)));
 	
 	return true;

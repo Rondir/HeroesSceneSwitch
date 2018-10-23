@@ -19,7 +19,7 @@ private:
 		 QString HeroesMenuScene;
 		 QString HeroesGameScene;
 		 QString TempFolder;
-		 QString ReplayFolder;
+		 QList<QString> ReplayFolders;
 		 bool Autostart;
 		 bool Enabled;
 		 bool Debug;
