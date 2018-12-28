@@ -4,7 +4,4 @@ Setup:
 
 	- two gamestates are possible - "Menu" and "Game"
 	- "Game" state is is triggered at Loading Screen
-	- "Menu" state is triggered when the match finished
-
-Update 12.09.2018:
-	Heroes of the Storm has changed a lot with the last patch, the plugin is not working anymore.
+	- "Menu" state is triggered when the match finished, save replay automatically should be enabled in game
